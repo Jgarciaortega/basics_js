@@ -1,125 +1,186 @@
-window.onload = init;
+/*
+document.addEventListener("click", function () {
+    document.getElementById("caja").addEventListener("mousedown", prueba);
+    alert("hola");
 
-window.addEventListener('keypress', teclear);
+})*/
 
-//VARIABLE GLOBALES
-let pantalla;
-let signo = false;
-let punto = false;
+var botones;
+var pantalla;
+var punto = true;
 
 
-function teclear(ev){
+window.onload = function () {
 
-    mostrarEnDisplay(ev.key);
+    pantalla = document.getElementById("pantalla");
+    pantalla.value = "0";
+    
 }
 
-function init() {
+window.addEventListener("keydown", function (event) {
+    
+   recogerPulsacion(event.key);
+    
+}, false);
 
-    let botones = document.querySelectorAll('.boton');
-    pantalla = document.querySelector('input');
+document.addEventListener("DOMContentLoaded",
 
-    botones.forEach(boton => {
+    function () {
 
-        boton.addEventListener('mousedown', recogerPulsacion);
-        boton.addEventListener('mouseup', quitarSombra);
+        botones = document.getElementsByClassName("boton");
 
-    });
+        for (let index = 0; index < botones.length; index++) {
 
-}
+            botones[index].addEventListener("mousedown", pulsarTecla);
+            botones[index].addEventListener("mouseup", soltarTecla)
 
-function recogerPulsacion() {
+        }
 
-    this.classList.add('sombra');
+    })
 
-    mostrarEnDisplay(this.innerText);
 
-}
+function recogerPulsacion(pulsacion){
 
-function quitarSombra() {
+    if ((pulsacion == "Backspace") || (pulsacion == "Enter") || (!isNaN(pulsacion)) || (pulsacion == "+") || (pulsacion == "-") || (pulsacion == "*") ||
+    pulsacion == "/" || pulsacion == "."){
 
-    this.classList.remove('sombra'); 
-
-}
-
-function mostrarEnDisplay(digito) {
-
-    let esNumero = compruebaSiNumero(digito);
-
-    if (pantalla.value == 0) {
-
-        pantalla.value = "";
+        actualizarDisplay(pulsacion);
 
     }
+}
 
-    if (digito == '*') ditio = 'x';
+function pulsarTecla() {
 
-    if (esNumero) {
+    this.classList.add("sombreado");
 
-        pantalla.value += digito;
-        signo = false;
+    if (this.id == "borrar") {
+
+        actualizarDisplay(this.id);
 
     } else {
 
-        if (!pantalla.value == "") {
+        actualizarDisplay(this.innerText);
 
-            if (!signo) {
+    }
 
-                if (digito == '+' || digito == '-' || digito == '/' || digito == 'x') {
+}
 
-                    pantalla.value += digito;
-                    signo = true;
-                    punto = false;
+function soltarTecla() {
 
-                }
+    this.classList.remove("sombreado");
 
-                if(digito == '.' && !punto){
+}
 
-                    pantalla.value += ',';
-                    signo = true;
-                    punto = true;
+function actualizarDisplay(digito) {
 
-                } 
+    var totalDigitos = pantalla.value.length;
+
+
+    if (pantalla.value == 0) pantalla.value = "";
+
+    if (digito == "C") {
+
+        pantalla.value = 0;
+
+
+    } else if ((digito == "=") || (digito == "Enter")) {
+
+        calcular(pantalla.value);
+
+    } else if ((digito == "borrar") || (digito == "Backspace")){
+
+        if (pantalla.value.length > 1) {
+
+            if(pantalla.value.charAt(totalDigitos - 1) == ")") {
+
+                pantalla.value = pantalla.value.substring(1, totalDigitos - 1);
+
+
+            }else{
+
+                pantalla.value = pantalla.value.substring(0, totalDigitos - 1);
             }
-
-
+            
 
         } else {
 
             pantalla.value = 0;
-
         }
 
+    } else if (digito == "()") {
 
-        if (digito == "=") {
+        ponerParentesis(pantalla.value);
 
-            if(!signo) calcular();
-            punto = false;
+    } else if (digito == ".") {
+
+        if (punto){
+
+            pantalla.value += digito;
+        }
+
+    } else {
+
+        /* Si recibe una opcion no numerica */
+        if (isNaN(digito)) {
+            /* Concatenamos siempre que el valor previo no sea un operador */
+
+            if (totalDigitos >= 1 && pantalla.value != 0) {
+
+                if (!isNaN(pantalla.value.charAt(totalDigitos - 1))) {
+
+                    pantalla.value += digito;
+
+                }
+            } else {
+
+                pantalla.value = 0;
+            }
+
+            /* Si recibe un numero concatenamos */
+        } else {
             
+            pantalla.value += digito;
+            
+
         }
 
-        if (digito == "C") pantalla.value = 0;
+    }
+}
 
+function calcular(operacion) {
+
+    operacion = operacion.replace("x", "*");
+    let cadena = new Array();
+
+    if (operacion.indexOf("%") != -1) {
+
+        cadena = operacion.split("%");
+        pantalla.value = (cadena[0] * cadena[1]) / 100;
+
+    } else {
+
+        try {
+
+            pantalla.value = eval(operacion);
+
+        } catch (error) {
+
+            pantalla.value = "ERROR";
+        }
 
     }
+}
 
+function ponerParentesis(operacion) {
+
+    operacion = "(" + operacion + ")";
+
+    pantalla.value = operacion;
 }
 
 
-function compruebaSiNumero(digito) {
-
-    let numero = false;
-
-    if (!isNaN(digito)) {
-
-        numero = true;
-
-    }
-
-    return numero;
-}
 
 
-function calcular() {
 
-    pantalla.value = eval(pantalla.value);
-}
+
+
